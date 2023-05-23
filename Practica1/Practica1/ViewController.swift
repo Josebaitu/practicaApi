@@ -7,20 +7,20 @@
 
 import UIKit
 
-struct Informacion: Codable{
-    let results: [Info]
-    let info: [Info]
+struct Informacion: Codable {
+    let results: [Result]
 }
-struct Info: Codable {
+
+struct Result: Codable {
     let gender: String
     let email: String
-    let phone: Int
-    let cell: Int
+    let phone: String // fíjate que la respuesta de la api es un string, no un Int
+    let cell: String // fíjate que la respuesta de la api es un string, no un Int
 }
 
 class ViewController: UIViewController {
 
-    var informacionMia: [Info] = []
+    var informacionMia: [Result] = []
     
     @IBOutlet weak var miTabla: UITableView!
     
@@ -43,10 +43,8 @@ class ViewController: UIViewController {
             if let error = error {
                 print(error.localizedDescription)
             } else if let data = data {
-                guard let datosDecodificados = try? JSONDecoder().decode(Informacion.self, from: data) else {
-                    fatalError("algo estás haciendo mal en la decodificación :)")
-                }
-                self.informacionMia = datosDecodificados.results
+                let decodedData = self.decodeData(data)
+                self.informacionMia = decodedData.results
                 // Refresca la interfaz de usuario en el hilo principal
                 DispatchQueue.main.async {
                     // El hilo principal es un núcleo del procesador del móvil que se encarga de actualizar la pantalla,
@@ -61,6 +59,22 @@ class ViewController: UIViewController {
         }
         // le decimos a la query que se ejecute
         dataTask.resume()
+    }
+
+    func decodeData(_ data: Data) -> Informacion {
+        do {
+            let decodedData = try JSONDecoder().decode(Informacion.self, from: data)
+            return decodedData
+        } catch let error {
+            // Si la ejecución entra aquí significa que nos hemos equivocado a la hora de
+            // definir la estructura de "Informacion" y los datos no se pueden decodificar
+            // correctamente. Normalmente yo miraría la respuesta del servidor y comprobaría
+            // que los tipos de datos concuerdan con lo que estoy diciendo en mi código.
+            // En este caso, habías cometido el error de decir que el número de teléfono y
+            // la variable "cell" eran de tipo Int, cuando si miras el JSON de la respuesta
+            // son de tipo String
+            fatalError(error.localizedDescription)
+        }
     }
 }
 
